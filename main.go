@@ -83,6 +83,7 @@ func main() {
 	bot, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
 		lit.Error("Error while creating bot: %s", err)
+		return
 	}
 
 	// Also start HTTP server to serve generated .mp3 files
@@ -100,48 +101,40 @@ func main() {
 		// Checks if the update is an inline query, and if it's not empty
 		if update.InlineQuery != nil && update.InlineQuery.Query != "" {
 			var (
-				query = strings.ToUpper(update.InlineQuery.Query)
-				uuid  string
-				t     []interface{}
+				query      string
+				upperQuery = strings.ToUpper(update.InlineQuery.Query)
+				uuid       string
+				results    []interface{}
 			)
 
 			// Various custom command
-			if strings.HasPrefix(query, "TRENO") {
-				query = strings.TrimSpace(searchAndGetTrain(strings.TrimPrefix(query, "TRENO ")))
-				if query != "" {
-					uuid = genAudio(query)
-
-					t = append(t, tgbotapi.NewInlineQueryResultVoice(uuid, host+uuid+".mp3", query))
-				} else {
+			switch {
+			case strings.HasPrefix(upperQuery, "TRENO"):
+				query = strings.TrimSpace(searchAndGetTrain(strings.TrimPrefix(upperQuery, "TRENO ")))
+				if query == "" {
 					query = "Nessun treno trovato, agagagaga!"
-					uuid = genAudio(query)
-
-					t = append(t, tgbotapi.NewInlineQueryResultVoice(uuid, host+uuid+".mp3", query))
 				}
-			} else {
-				if strings.HasPrefix(query, "COVID") {
-					query = strings.TrimSpace(getCovid())
-					uuid = genAudio(query)
+				break
 
-					t = append(t, tgbotapi.NewInlineQueryResultVoice(uuid, host+uuid+".mp3", query))
-				} else {
-					if strings.HasPrefix(query, "BESTEMMIA") {
-						query = strings.TrimSpace(bestemmia())
-						uuid = genAudio(query)
+			case strings.HasPrefix(upperQuery, "COVID"):
+				query = strings.TrimSpace(getCovid())
+				break
 
-						t = append(t, tgbotapi.NewInlineQueryResultVoice(uuid, host+uuid+".mp3", query))
-					} else {
-						// If no special command is used, use the query itself
-						uuid = genAudio(query)
-						t = append(t, tgbotapi.NewInlineQueryResultVoice(uuid, host+uuid+".mp3", update.InlineQuery.Query))
-					}
-				}
+			case strings.HasPrefix(upperQuery, "BESTEMMIA"):
+				query = strings.TrimSpace(bestemmia())
+				break
+
+			default:
+				query = upperQuery
 			}
+
+			uuid = genAudio(query)
+			results = append(results, tgbotapi.NewInlineQueryResultVoice(uuid, host+uuid+".mp3", query))
 
 			// Send audio
 			_, err := bot.AnswerInlineQuery(tgbotapi.InlineConfig{
 				InlineQueryID: update.InlineQuery.ID,
-				Results:       t,
+				Results:       results,
 			})
 
 			if err != nil {
@@ -184,7 +177,7 @@ func bestemmia() string {
 
 	s := s1 + " " + adjectives[rand.Intn(len(adjectives))]
 
-	if s1 == "Madonna" {
+	if s1 == gods[2] {
 		s = s[:len(s)-2] + "a"
 	}
 

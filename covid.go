@@ -9,26 +9,6 @@ import (
 	"time"
 )
 
-type Covid struct {
-	Data                      DateTime `csv:"data"`
-	Stato                     string   `csv:"stato"`
-	RicoveratiConSintomi      int      `csv:"ricoverati_con_sintomi"`
-	TerapiaIntensiva          int      `csv:"terapia_intensiva"`
-	TotaleOspedalizzati       int      `csv:"totale_ospedalizzati"`
-	IsolamentoDomiciliare     int      `csv:"isolamento_domiciliare"`
-	TotalePositivi            int      `csv:"totale_positivi"`
-	VariazioneTotalePositivi  int      `csv:"variazione_totale_positivi"`
-	NuoviPositivi             int      `csv:"nuovi_positivi"`
-	DimessiGuariti            int      `csv:"dimessi_guariti"`
-	Deceduti                  int      `csv:"deceduti"`
-	CasiDaSospettoDiagnostico string   `csv:"casi_da_sospetto_diagnostico"`
-	CasiDaScreening           string   `csv:"casi_da_screening"`
-	TotaleCasi                int      `csv:"totale_casi"`
-	Tamponi                   int      `csv:"tamponi"`
-	CasiTestati               string   `csv:"casi_testati"`
-	Note                      string   `csv:"note"`
-}
-
 type DateTime struct {
 	time.Time
 }
