@@ -47,7 +47,7 @@ func getTrain(idStazioneTreno string) string {
 		stazioni, binario string
 		ritardo           int
 		ora               time.Time
-		treno             = Treno{}
+		treno             = treno{}
 	)
 
 	res, err := http.Get("http://www.viaggiatreno.it/viaggiatrenonew/resteasy/viaggiatreno/andamentoTreno/" + idStazioneTreno)

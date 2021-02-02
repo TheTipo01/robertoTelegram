@@ -1,40 +1,38 @@
 package main
 
 import (
-	"github.com/gocarina/gocsv"
+	"encoding/json"
 	"github.com/goodsign/monday"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
+	"io/ioutil"
 	"net/http"
 	"time"
 )
 
-type DateTime struct {
-	time.Time
-}
-
-// UnmarshalCSV converts the CSV string as internal date
-func (date *DateTime) UnmarshalCSV(csv string) (err error) {
-
-	date.Time, err = time.Parse("2006-01-02T15:04:05", csv)
-	return err
-
-}
-
-// Gets latest COVID-19 data for Italy
 func getCovid() string {
 
-	var covid []*Covid
-	p := message.NewPrinter(language.Italian)
+	var (
+		covid covid
+		p     = message.NewPrinter(language.Italian)
+		date  time.Time
+	)
 
-	resp, err := http.Get("https://github.com/pcm-dpc/COVID-19/raw/master/dati-andamento-nazionale/dpc-covid19-ita-andamento-nazionale.csv")
+	resp, err := http.Get("https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-json/dpc-covid19-ita-andamento-nazionale.json")
 	if err != nil {
 		return ""
 	}
 
-	_ = gocsv.Unmarshal(resp.Body, &covid)
+	data, _ := ioutil.ReadAll(resp.Body)
 	_ = resp.Body.Close()
 
-	return "Dati del " + monday.Format(covid[len(covid)-1].Data.Time, "2 January 2006", monday.LocaleItIT) + "; Nuovi casi: " + p.Sprintf("%d", covid[len(covid)-1].NuoviPositivi) + "; Numero di tamponi effettuati oggi: " + p.Sprintf("%d", covid[len(covid)-1].Tamponi-covid[len(covid)-2].Tamponi) + "; Numero di morti oggi: " + p.Sprintf("%d", (covid[len(covid)-1].Deceduti-covid[len(covid)-2].Deceduti)) + "; Totale positivi: " + p.Sprintf("%d", covid[len(covid)-1].TotalePositivi)
+	err = json.Unmarshal(data, &covid)
+	if err != nil {
+		return ""
+	}
+
+	date, _ = time.Parse("2006-01-02T15:04:05", covid[len(covid)-1].Data)
+
+	return "Dati del " + monday.Format(date, "2 January 2006", monday.LocaleItIT) + "; Nuovi casi: " + p.Sprintf("%d", covid[len(covid)-1].NuoviPositivi) + "; Numero di tamponi effettuati oggi: " + p.Sprintf("%d", covid[len(covid)-1].Tamponi-covid[len(covid)-2].Tamponi) + "; Numero di morti oggi: " + p.Sprintf("%d", covid[len(covid)-1].Deceduti-covid[len(covid)-2].Deceduti) + "; Totale positivi: " + p.Sprintf("%d", covid[len(covid)-1].TotalePositivi)
 
 }

@@ -105,6 +105,7 @@ func main() {
 				upperQuery = strings.ToUpper(update.InlineQuery.Query)
 				uuid       string
 				results    []interface{}
+				isCommand  = true
 			)
 
 			// Various custom command
@@ -126,9 +127,16 @@ func main() {
 
 			default:
 				query = upperQuery
+				isCommand = false
 			}
 
 			uuid = genAudio(query)
+
+			// So the title of the result isn't all uppercase when there's no command
+			if !isCommand {
+				query = update.InlineQuery.Query
+			}
+
 			results = append(results, tgbotapi.NewInlineQueryResultVoice(uuid, host+uuid+".mp3", query))
 
 			// Send audio

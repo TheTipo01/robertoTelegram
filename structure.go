@@ -1,6 +1,6 @@
 package main
 
-type Treno struct {
+type treno struct {
 	TipoTreno        string      `json:"tipoTreno"`
 	Orientamento     interface{} `json:"orientamento"`
 	CodiceCliente    int         `json:"codiceCliente"`
@@ -126,22 +126,29 @@ type Treno struct {
 	CompImgCambiNumerazione               string        `json:"compImgCambiNumerazione"`
 }
 
-type Covid struct {
-	Data                      DateTime `csv:"data"`
-	Stato                     string   `csv:"stato"`
-	RicoveratiConSintomi      int      `csv:"ricoverati_con_sintomi"`
-	TerapiaIntensiva          int      `csv:"terapia_intensiva"`
-	TotaleOspedalizzati       int      `csv:"totale_ospedalizzati"`
-	IsolamentoDomiciliare     int      `csv:"isolamento_domiciliare"`
-	TotalePositivi            int      `csv:"totale_positivi"`
-	VariazioneTotalePositivi  int      `csv:"variazione_totale_positivi"`
-	NuoviPositivi             int      `csv:"nuovi_positivi"`
-	DimessiGuariti            int      `csv:"dimessi_guariti"`
-	Deceduti                  int      `csv:"deceduti"`
-	CasiDaSospettoDiagnostico string   `csv:"casi_da_sospetto_diagnostico"`
-	CasiDaScreening           string   `csv:"casi_da_screening"`
-	TotaleCasi                int      `csv:"totale_casi"`
-	Tamponi                   int      `csv:"tamponi"`
-	CasiTestati               string   `csv:"casi_testati"`
-	Note                      string   `csv:"note"`
+type covid []struct {
+	Data                               string      `json:"data"`
+	Stato                              string      `json:"stato"`
+	RicoveratiConSintomi               int         `json:"ricoverati_con_sintomi"`
+	TerapiaIntensiva                   int         `json:"terapia_intensiva"`
+	TotaleOspedalizzati                int         `json:"totale_ospedalizzati"`
+	IsolamentoDomiciliare              int         `json:"isolamento_domiciliare"`
+	TotalePositivi                     int         `json:"totale_positivi"`
+	VariazioneTotalePositivi           int         `json:"variazione_totale_positivi"`
+	NuoviPositivi                      int         `json:"nuovi_positivi"`
+	DimessiGuariti                     int         `json:"dimessi_guariti"`
+	Deceduti                           int         `json:"deceduti"`
+	CasiDaSospettoDiagnostico          interface{} `json:"casi_da_sospetto_diagnostico"`
+	CasiDaScreening                    interface{} `json:"casi_da_screening"`
+	TotaleCasi                         int         `json:"totale_casi"`
+	Tamponi                            int         `json:"tamponi"`
+	CasiTestati                        interface{} `json:"casi_testati"`
+	Note                               interface{} `json:"note"`
+	IngressiTerapiaIntensiva           interface{} `json:"ingressi_terapia_intensiva"`
+	NoteTest                           interface{} `json:"note_test"`
+	NoteCasi                           interface{} `json:"note_casi"`
+	TotalePositiviTestMolecolare       interface{} `json:"totale_positivi_test_molecolare"`
+	TotalePositiviTestAntigenicoRapido interface{} `json:"totale_positivi_test_antigenico_rapido"`
+	TamponiTestMolecolare              interface{} `json:"tamponi_test_molecolare"`
+	TamponiTestAntigenicoRapido        interface{} `json:"tamponi_test_antigenico_rapido"`
 }
