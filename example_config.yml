@@ -1,0 +1,10 @@
+# Telegram token, get it from @BotFather on Telegram
+token: ""
+
+# This bot exposed an HTTP server on port 8069 to serve .mp3 file, you should expose that using a reverse proxy
+# Remember to put a slash at the end
+# Example: https://roberto.example.com/temp/
+host: ""
+
+# Log level
+logleve: "informational"
