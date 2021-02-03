@@ -26,6 +26,7 @@ archives:
       - README.md
       - LICENSE
       - balcon.exe
+      - libsamplerate.dll
       - parole.txt
 checksum:
   name_template: 'checksums.txt'

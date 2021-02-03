@@ -188,3 +188,5 @@ robertoTelegram
 config.yml
 dist/
 temp/
+!balcon.exe
+!libsamplerate.dll
