@@ -158,9 +158,16 @@ func gen(text string, uuid string) {
 	_, err := os.Stat("./temp/" + uuid + ".mp3")
 
 	if err != nil {
-		cmd := exec.Command("gen.bat", uuid)
-		cmd.Stdin = strings.NewReader(text)
-		_ = cmd.Run()
+		tts := exec.Command("balcon", "-i", "-o", "-enc", "utf8", "-n", "Roberto")
+		tts.Stdin = strings.NewReader(text)
+		ttsOut, _ := tts.StdoutPipe()
+		_ = tts.Start()
+
+		ffmpeg := exec.Command("ffmpeg", "-i", "pipe:0", "-f", "s16le", "-ar", "48000", "-ac", "2", "-f", "mp3", "./temp/"+uuid+".mp3")
+		ffmpeg.Stdin = ttsOut
+		_ = ffmpeg.Run()
+
+		_ = tts.Wait()
 	}
 
 }

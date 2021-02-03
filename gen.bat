@@ -1,1 +1,0 @@
-balcon -i -o -enc utf8 -n Roberto | ffmpeg -i pipe:0 -f s16le -ar 48000 -ac 2 -f mp3 ./temp/%1.mp3

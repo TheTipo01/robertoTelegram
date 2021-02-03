@@ -25,7 +25,6 @@ archives:
     files:
       - README.md
       - LICENSE
-      - gen.bat
       - balcon.exe
       - parole.txt
 checksum:
