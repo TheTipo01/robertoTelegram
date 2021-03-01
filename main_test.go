@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -19,19 +20,24 @@ func TestBestemmia(t *testing.T) {
 }
 
 func TestGenAudio(t *testing.T) {
-	_ = os.Remove("./temp/NP5M2VS4G9AQEEIPC6V6DQH5J1RGS4PE.mp3")
-	uuid := genAudio("AGAGAGAGAGA")
-	stat, err := os.Stat("./temp/NP5M2VS4G9AQEEIPC6V6DQH5J1RGS4PE.mp3")
+	if runtime.GOOS == "windows" {
+		_ = os.Remove("./temp/NP5M2VS4G9AQEEIPC6V6DQH5J1RGS4PE.mp3")
+		uuid := genAudio("AGAGAGAGAGA")
+		stat, err := os.Stat("./temp/NP5M2VS4G9AQEEIPC6V6DQH5J1RGS4PE.mp3")
 
-	if uuid != "NP5M2VS4G9AQEEIPC6V6DQH5J1RGS4PE" {
-		t.Error("Hash mismatch")
-	} else {
-		if err != nil {
-			t.Error("File doesn't exist")
+		if uuid != "NP5M2VS4G9AQEEIPC6V6DQH5J1RGS4PE" {
+			t.Error("Hash mismatch")
 		} else {
-			if !(stat.Size() > 0) {
-				t.Error("File is empty")
+			if err != nil {
+				t.Error("File doesn't exist")
+			} else {
+				if !(stat.Size() > 0) {
+					t.Error("File is empty")
+				}
 			}
 		}
+	} else {
+		t.Skip("Audio generation is only supported by windows")
 	}
+
 }

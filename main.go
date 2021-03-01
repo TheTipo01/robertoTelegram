@@ -24,6 +24,8 @@ var (
 	adjectives []string
 	// Gods
 	gods = []string{"Dio", "Gesù", "Madonna"}
+	// Array of emoji, containing description of them
+	emoji Emoji
 )
 
 func init() {
@@ -73,6 +75,8 @@ func init() {
 				lit.Error("Cannot create temp directory, %s", err)
 			}
 		}
+
+		emoji = emojiLoader()
 
 	}
 
@@ -126,7 +130,7 @@ func main() {
 				break
 
 			default:
-				query = upperQuery
+				query = emojiToDescription(upperQuery)
 				isCommand = false
 			}
 
