@@ -112,7 +112,7 @@ func main() {
 				isCommand  = true
 			)
 
-			lit.Info("%s: %s", update.Message.From.String(), update.InlineQuery.Query)
+			lit.Info("%s: %s", update.InlineQuery.From.String(), update.InlineQuery.Query)
 
 			// Various custom command
 			switch {
