@@ -24,8 +24,8 @@ var (
 	adjectives []string
 	// Gods
 	gods = []string{"Dio", "Gesù", "Madonna"}
-	// Array of emoji, containing description of them
-	emoji Emoji
+	// Emoji string replacer, replacing every emoji with it's description
+	emoji strings.Replacer
 )
 
 func init() {
@@ -76,7 +76,7 @@ func init() {
 			}
 		}
 
-		emoji = emojiLoader()
+		emoji = *emojiReplacer()
 
 	}
 
@@ -111,6 +111,8 @@ func main() {
 				results    []interface{}
 				isCommand  = true
 			)
+
+			lit.Info("%s: %s", update.Message.From.String(), update.InlineQuery.Query)
 
 			// Various custom command
 			switch {
