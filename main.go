@@ -4,8 +4,8 @@ import (
 	"crypto/sha1"
 	"encoding/base32"
 	"github.com/bwmarrin/lit"
-	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/spf13/viper"
+	tb "gopkg.in/tucnak/telebot.v2"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
@@ -18,7 +18,7 @@ import (
 var (
 	// Telegram token
 	token string
-	// HTTP server where we host .mp3
+	// HTTP server where we host .ogg
 	host string
 	// Array of adjectives
 	adjectives []string
@@ -26,6 +26,10 @@ var (
 	gods = []string{"Dio", "Gesù", "Madonna"}
 	// Emoji string replacer, replacing every emoji with it's description
 	emoji strings.Replacer
+)
+
+const (
+	audioExtension = ".ogg"
 )
 
 func init() {
@@ -83,36 +87,33 @@ func init() {
 }
 
 func main() {
-	// Start telegram session
-	bot, err := tgbotapi.NewBotAPI(token)
-	if err != nil {
-		lit.Error("Error while creating bot: %s", err)
-		return
-	}
-
-	// Also start HTTP server to serve generated .mp3 files
+	// Start HTTP server to serve generated .ogg files
 	http.Handle("/temp/", http.StripPrefix("/temp", http.FileServer(http.Dir("./temp"))))
 	go http.ListenAndServe(":8069", nil)
 
-	lit.Info("robertoTelegram is now running on %s", bot.Self.UserName)
+	// Create bot
+	b, err := tb.NewBot(tb.Settings{
+		Token:  token,
+		Poller: &tb.LongPoller{Timeout: 10 * time.Second},
+	})
+	if err != nil {
+		lit.Error(err.Error())
+		return
+	}
 
-	u := tgbotapi.NewUpdate(0)
-	u.Timeout = 60
-
-	updates, _ := bot.GetUpdatesChan(u)
-
-	for update := range updates {
-		// Checks if the update is an inline query, and if it's not empty
-		if update.InlineQuery != nil && update.InlineQuery.Query != "" {
+	b.Handle(tb.OnQuery, func(q *tb.Query) {
+		if q.Text != "" {
 			var (
+				start      = time.Now()
+				err        error
 				query      string
-				upperQuery = strings.ToUpper(update.InlineQuery.Query)
+				upperQuery = strings.ToUpper(q.Text)
 				uuid       string
-				results    []interface{}
 				isCommand  = true
+				results    = make(tb.Results, 1)
 			)
 
-			lit.Info("%s: %s", update.InlineQuery.From.String(), update.InlineQuery.Query)
+			lit.Info("%s: %s", q.From.Username, q.Text)
 
 			// Various custom command
 			switch {
@@ -140,28 +141,39 @@ func main() {
 
 			// So the title of the result isn't all uppercase when there's no command
 			if !isCommand {
-				query = update.InlineQuery.Query
+				query = q.Text
 			}
 
-			results = append(results, tgbotapi.NewInlineQueryResultVoice(uuid, host+uuid+".mp3", query))
+			// Create result
+			results[0] = &tb.VoiceResult{
+				URL:   host + uuid + audioExtension,
+				Title: query,
+			}
+
+			results[0].SetResultID(uuid)
 
 			// Send audio
-			_, err := bot.AnswerInlineQuery(tgbotapi.InlineConfig{
-				InlineQueryID: update.InlineQuery.ID,
-				Results:       results,
+			err = b.Answer(q, &tb.QueryResponse{
+				Results:   results,
+				CacheTime: 86400, // one day
 			})
-
 			if err != nil {
 				lit.Error("error while answering inline query: %s", err)
 			}
 
+			lit.Debug("took %s to answer query", time.Now().Sub(start).String())
 		}
-	}
+	})
+
+	// Start bot
+	lit.Info("robertoTelegram is now running")
+	b.Start()
+
 }
 
 // Generates audio from a string. Checks if it already exist before generating it
 func gen(text string, uuid string) {
-	_, err := os.Stat("./temp/" + uuid + ".mp3")
+	_, err := os.Stat("./temp/" + uuid + audioExtension)
 
 	if err != nil {
 		tts := exec.Command("balcon", "-i", "-o", "-enc", "utf8", "-n", "Roberto")
@@ -169,13 +181,12 @@ func gen(text string, uuid string) {
 		ttsOut, _ := tts.StdoutPipe()
 		_ = tts.Start()
 
-		ffmpeg := exec.Command("ffmpeg", "-i", "pipe:0", "-f", "s16le", "-ar", "48000", "-ac", "2", "-f", "mp3", "./temp/"+uuid+".mp3")
+		ffmpeg := exec.Command("ffmpeg", "-i", "pipe:0", "-f", "s16le", "-ar", "48000", "-ac", "2", "-f", "ogg", "./temp/"+uuid+audioExtension)
 		ffmpeg.Stdin = ttsOut
 		_ = ffmpeg.Run()
 
 		_ = tts.Wait()
 	}
-
 }
 
 // genAudio generates a mp3 file from a string, returning it's UUID (aka SHA1 hash of the text)
@@ -188,7 +199,6 @@ func genAudio(text string) string {
 	gen(text, uuid)
 
 	return uuid
-
 }
 
 // Generates a bestemmia
