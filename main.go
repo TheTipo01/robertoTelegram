@@ -18,7 +18,7 @@ import (
 var (
 	// Telegram token
 	token string
-	// HTTP server where we host .ogg
+	// HTTP server where we host .mp3
 	host string
 	// Array of adjectives
 	adjectives []string
@@ -29,7 +29,7 @@ var (
 )
 
 const (
-	audioExtension = ".ogg"
+	audioExtension = ".mp3"
 )
 
 func init() {
@@ -87,7 +87,7 @@ func init() {
 }
 
 func main() {
-	// Start HTTP server to serve generated .ogg files
+	// Start HTTP server to serve generated .mp3 files
 	http.Handle("/temp/", http.StripPrefix("/temp", http.FileServer(http.Dir("./temp"))))
 	go http.ListenAndServe(":8069", nil)
 
@@ -181,7 +181,7 @@ func gen(text string, uuid string) {
 		ttsOut, _ := tts.StdoutPipe()
 		_ = tts.Start()
 
-		ffmpeg := exec.Command("ffmpeg", "-i", "pipe:0", "-f", "s16le", "-ar", "48000", "-ac", "2", "-f", "ogg", "./temp/"+uuid+audioExtension)
+		ffmpeg := exec.Command("ffmpeg", "-i", "pipe:0", "-f", "s16le", "-ar", "48000", "-ac", "2", "-f", "mp3", "./temp/"+uuid+audioExtension)
 		ffmpeg.Stdin = ttsOut
 		_ = ffmpeg.Run()
 
