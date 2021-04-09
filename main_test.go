@@ -8,12 +8,30 @@ import (
 )
 
 func BenchmarkBestemmia(b *testing.B) {
+	// Read adjectives if they are not loaded before
+	if len(adjectives) == 0 {
+		initializeAdjectives()
+	}
+
 	for i := 0; i < b.N; i++ {
 		bestemmia()
 	}
 }
 
+func TestInitializeAdjectives(t *testing.T) {
+	initializeAdjectives()
+
+	if len(adjectives) == 0 {
+		t.Error("Adjectives slice is empty")
+	}
+}
+
 func TestBestemmia(t *testing.T) {
+	// Read adjectives if they are not loaded before
+	if len(adjectives) == 0 {
+		initializeAdjectives()
+	}
+
 	if strings.TrimSpace(bestemmia()) == "" {
 		t.Error("Generated string is empty")
 	}

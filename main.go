@@ -69,9 +69,7 @@ func init() {
 			break
 		}
 
-		// Read adjective
-		foo, _ := ioutil.ReadFile("parole.txt")
-		adjectives = strings.Split(string(foo), "\n")
+		initializeAdjectives()
 
 		// Create folders used by the bot
 		if _, err = os.Stat("./temp"); err != nil {
@@ -191,7 +189,6 @@ func gen(text string, uuid string) {
 
 // genAudio generates a mp3 file from a string, returning it's UUID (aka SHA1 hash of the text)
 func genAudio(text string) string {
-
 	h := sha1.New()
 	h.Write([]byte(text))
 	uuid := strings.ToUpper(base32.HexEncoding.EncodeToString(h.Sum(nil)))
@@ -203,7 +200,6 @@ func genAudio(text string) string {
 
 // Generates a bestemmia
 func bestemmia() string {
-
 	s1 := gods[rand.Intn(len(gods))]
 
 	s := s1 + " " + adjectives[rand.Intn(len(adjectives))]
@@ -213,4 +209,10 @@ func bestemmia() string {
 	}
 
 	return s
+}
+
+// Reads adjectives
+func initializeAdjectives() {
+	foo, _ := ioutil.ReadFile("parole.txt")
+	adjectives = strings.Split(string(foo), "\n")
 }
