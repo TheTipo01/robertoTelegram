@@ -25,7 +25,7 @@ var (
 	// Gods
 	gods = []string{"Dio", "Gesù", "Madonna"}
 	// Emoji string replacer, replacing every emoji with it's description
-	emoji strings.Replacer
+	emoji *strings.Replacer
 )
 
 const (
@@ -55,18 +55,14 @@ func init() {
 
 		// Set lit.LogLevel to the given value
 		switch strings.ToLower(viper.GetString("loglevel")) {
-		case "logerror", "error":
-			lit.LogLevel = lit.LogError
-			break
 		case "logwarning", "warning":
 			lit.LogLevel = lit.LogWarning
-			break
+
 		case "loginformational", "informational":
 			lit.LogLevel = lit.LogInformational
-			break
+
 		case "logdebug", "debug":
 			lit.LogLevel = lit.LogDebug
-			break
 		}
 
 		initializeAdjectives()
@@ -78,7 +74,7 @@ func init() {
 			}
 		}
 
-		emoji = *emojiReplacer()
+		emoji = emojiReplacer()
 
 	}
 
@@ -120,15 +116,12 @@ func main() {
 				if query == "" {
 					query = "Nessun treno trovato, agagagaga!"
 				}
-				break
 
 			case strings.HasPrefix(upperQuery, "COVID"):
 				query = strings.TrimSpace(getCovid())
-				break
 
 			case strings.HasPrefix(upperQuery, "BESTEMMIA"):
 				query = strings.TrimSpace(bestemmia())
-				break
 
 			default:
 				query = emojiToDescription(upperQuery)
@@ -159,7 +152,7 @@ func main() {
 				lit.Error("error while answering inline query: %s", err)
 			}
 
-			lit.Debug("took %s to answer query", time.Now().Sub(start).String())
+			lit.Debug("took %s to answer query", time.Since(start).String())
 		}
 	})
 
