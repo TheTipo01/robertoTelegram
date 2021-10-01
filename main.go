@@ -167,16 +167,41 @@ func gen(text string, uuid string) {
 	_, err := os.Stat("./temp/" + uuid + audioExtension)
 
 	if err != nil {
-		tts := exec.Command("balcon", "-i", "-o", "-enc", "utf8", "-n", "Roberto")
-		tts.Stdin = strings.NewReader(text)
-		ttsOut, _ := tts.StdoutPipe()
-		_ = tts.Start()
+		var tts, ffmpeg *exec.Cmd
+		// Create a channel so that we can wait a maximum of 30 second before killing the processes
+		c := make(chan int)
 
-		ffmpeg := exec.Command("ffmpeg", "-i", "pipe:0", "-f", "s16le", "-ar", "48000", "-ac", "2", "-f", "mp3", "./temp/"+uuid+audioExtension)
-		ffmpeg.Stdin = ttsOut
-		_ = ffmpeg.Run()
+		go func() {
+			tts = exec.Command("balcon", "-i", "-o", "-enc", "utf8", "-n", "Roberto")
+			tts.Stdin = strings.NewReader(text)
+			ttsOut, _ := tts.StdoutPipe()
+			_ = tts.Start()
 
-		_ = tts.Wait()
+			ffmpeg = exec.Command("ffmpeg", "-i", "pipe:0", "-f", "s16le", "-ar", "48000", "-ac", "2", "-f", "mp3", "./temp/"+uuid+audioExtension)
+			ffmpeg.Stdin = ttsOut
+			_ = ffmpeg.Run()
+
+			_ = tts.Wait()
+			c <- 1
+		}()
+
+		timer := time.NewTimer(time.Second * 30)
+		// If we get a response from the channel in a reasonable time, we just exit normally
+		select {
+		case <-c:
+			timer.Stop()
+			break
+		case <-timer.C:
+			// After 30 second, we can assume the process failed in some manner
+			if tts != nil && tts.Process != nil {
+				_ = tts.Process.Kill()
+			}
+
+			if ffmpeg != nil && ffmpeg.Process != nil {
+				_ = ffmpeg.Process.Kill()
+			}
+		}
+
 	}
 }
 
