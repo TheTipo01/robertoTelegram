@@ -6,6 +6,8 @@ import (
 	"github.com/kkyr/fig"
 	tb "gopkg.in/tucnak/telebot.v2"
 	"math/rand"
+	"net/http"
+	"os"
 	"strings"
 	"time"
 )
@@ -53,9 +55,20 @@ func init() {
 	case "logdebug", "debug":
 		lit.LogLevel = lit.LogDebug
 	}
+
+	// Create folders used by the bot
+	if _, err = os.Stat("./temp"); err != nil {
+		if err = os.Mkdir("./temp", 0755); err != nil {
+			lit.Error("Cannot create temp directory, %s", err)
+		}
+	}
 }
 
 func main() {
+	// Start HTTP server to serve generated .mp3 files
+	http.Handle("/temp/", http.StripPrefix("/temp", http.FileServer(http.Dir("./temp"))))
+	go http.ListenAndServe(":8069", nil)
+
 	// Create bot
 	b, err := tb.NewBot(tb.Settings{
 		Token:  token,
