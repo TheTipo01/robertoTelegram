@@ -14,7 +14,6 @@ type config struct {
 	Token    string `fig:"token" validate:"required"`
 	Host     string `fig:"host" validate:"required"`
 	LogLevel string `fig:"loglevel" validate:"required"`
-	Database string `fig:"database" validate:"required"`
 }
 
 const audioExtension = ".mp3"
