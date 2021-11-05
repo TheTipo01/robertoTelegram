@@ -4,7 +4,6 @@ import (
 	"github.com/TheTipo01/libRoberto"
 	"github.com/bwmarrin/lit"
 	"github.com/kkyr/fig"
-	"github.com/spf13/viper"
 	tb "gopkg.in/tucnak/telebot.v2"
 	"math/rand"
 	"strings"
@@ -45,7 +44,7 @@ func init() {
 	host = cfg.Host
 
 	// Set lit.LogLevel to the given value
-	switch strings.ToLower(viper.GetString("loglevel")) {
+	switch strings.ToLower(cfg.LogLevel) {
 	case "logwarning", "warning":
 		lit.LogLevel = lit.LogWarning
 
