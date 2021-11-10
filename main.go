@@ -96,23 +96,23 @@ func main() {
 			// Various custom command
 			switch {
 			case strings.HasPrefix(upperQuery, "TRENO"):
-				query = strings.TrimSpace(libRoberto.SearchAndGetTrain(strings.TrimPrefix(upperQuery, "TRENO ")))
+				query = strings.TrimSpace(libroberto.SearchAndGetTrain(strings.TrimPrefix(upperQuery, "TRENO ")))
 				if query == "" {
 					query = "Nessun treno trovato, agagagaga!"
 				}
 
 			case strings.HasPrefix(upperQuery, "COVID"):
-				query = strings.TrimSpace(libRoberto.GetCovid())
+				query = strings.TrimSpace(libroberto.GetCovid())
 
 			case strings.HasPrefix(upperQuery, "BESTEMMIA"):
-				query = strings.TrimSpace(libRoberto.Bestemmia())
+				query = strings.TrimSpace(libroberto.Bestemmia())
 
 			default:
-				query = libRoberto.EmojiToDescription(upperQuery)
+				query = libroberto.EmojiToDescription(upperQuery)
 				isCommand = false
 			}
 
-			uuid = libRoberto.GenAudioMp3(query, time.Second*30)
+			uuid = libroberto.GenAudioMp3(query, time.Second*30)
 
 			// So the title of the result isn't all uppercase when there's no command
 			if !isCommand {
