@@ -122,8 +122,9 @@ func main() {
 			// Create result
 			results[0] = &tb.VoiceResult{
 
-				URL:   host + uuid + audioExtension,
-				Title: query,
+				URL:     host + uuid + audioExtension,
+				Title:   query,
+				Caption: query,
 			}
 
 			results[0].SetResultID(uuid)
