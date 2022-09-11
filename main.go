@@ -16,6 +16,7 @@ type config struct {
 	Token    string `fig:"token" validate:"required"`
 	Host     string `fig:"host" validate:"required"`
 	LogLevel string `fig:"loglevel" validate:"required"`
+	Voice    string `fig:"voice" validate:"required"`
 }
 
 const audioExtension = ".mp3"
@@ -43,6 +44,7 @@ func init() {
 	// Config file found
 	token = cfg.Token
 	host = cfg.Host
+	libroberto.Voice = cfg.Voice
 
 	// Set lit.LogLevel to the given value
 	switch strings.ToLower(cfg.LogLevel) {
