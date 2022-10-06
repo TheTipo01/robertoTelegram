@@ -17,6 +17,7 @@ type config struct {
 	Host     string `fig:"host" validate:"required"`
 	LogLevel string `fig:"loglevel" validate:"required"`
 	Voice    string `fig:"voice" validate:"required"`
+	Address  string `fig:"address" validate:"required"`
 }
 
 const audioExtension = ".mp3"
@@ -26,6 +27,8 @@ var (
 	token string
 	// HTTP server where we host .mp3
 	host string
+	// HTTP server address
+	addr string
 )
 
 func init() {
@@ -44,6 +47,7 @@ func init() {
 	// Config file found
 	token = cfg.Token
 	host = cfg.Host
+	addr = cfg.Address
 	libroberto.Voice = cfg.Voice
 
 	// Set lit.LogLevel to the given value
@@ -69,7 +73,7 @@ func init() {
 func main() {
 	// Start HTTP server to serve generated .mp3 files
 	http.Handle("/temp/", http.StripPrefix("/temp", http.FileServer(http.Dir("./temp"))))
-	go http.ListenAndServe(":8069", nil)
+	go http.ListenAndServe(addr, nil)
 
 	// Create bot
 	b, err := tb.NewBot(tb.Settings{
@@ -123,10 +127,10 @@ func main() {
 
 			// Create result
 			results[0] = &tb.VoiceResult{
-
-				URL:     host + uuid + audioExtension,
-				Title:   query,
-				Caption: query,
+				URL:       host + uuid + audioExtension,
+				Title:     query,
+				Caption:   "||" + query + "||",
+				ParseMode: tb.ModeMarkdownV2,
 			}
 
 			results[0].SetResultID(uuid)
