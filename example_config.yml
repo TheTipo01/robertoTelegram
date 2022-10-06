@@ -11,3 +11,6 @@ loglevel: informational
 
 # The voice to use
 voice: Roberto
+
+# The address to where the HTTP server should bind
+address: :8069
