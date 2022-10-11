@@ -4,7 +4,7 @@ import (
 	"github.com/TheTipo01/libRoberto"
 	"github.com/bwmarrin/lit"
 	"github.com/kkyr/fig"
-	tb "gopkg.in/tucnak/telebot.v2"
+	tb "gopkg.in/telebot.v3"
 	"math/rand"
 	"net/http"
 	"os"
@@ -85,19 +85,20 @@ func main() {
 		return
 	}
 
-	b.Handle(tb.OnQuery, func(q *tb.Query) {
-		if q.Text != "" {
+	b.Handle(tb.OnQuery, func(c tb.Context) error {
+		text := c.Query().Text
+
+		if text != "" {
 			var (
 				start      = time.Now()
-				err        error
 				query      string
-				upperQuery = strings.ToUpper(q.Text)
+				upperQuery = strings.ToUpper(text)
 				uuid       string
 				isCommand  = true
 				results    = make(tb.Results, 1)
 			)
 
-			lit.Debug("%s: %s", q.From.Username, q.Text)
+			lit.Debug("%s: %s", c.Query().Sender.Username, text)
 
 			// Various custom command
 			switch {
@@ -122,34 +123,39 @@ func main() {
 
 			// So the title of the result isn't all uppercase when there's no command
 			if !isCommand {
-				query = q.Text
+				query = text
 			}
 
 			// Create result
 			results[0] = &tb.VoiceResult{
-				URL:       host + uuid + audioExtension,
-				Title:     query,
-				Caption:   "||" + query + "||",
-				ParseMode: tb.ModeMarkdownV2,
+				URL:     host + uuid + audioExtension,
+				Title:   query,
+				Caption: "||" + escapeMarkdown(query) + "||",
 			}
 
 			results[0].SetResultID(uuid)
+			results[0].SetParseMode(tb.ModeMarkdownV2)
+
+			lit.Debug("took %s to answer query", time.Since(start).String())
 
 			// Send audio
-			err = b.Answer(q, &tb.QueryResponse{
+			return c.Answer(&tb.QueryResponse{
 				Results:   results,
 				CacheTime: 86400, // one day
 			})
-			if err != nil {
-				lit.Error("error while answering inline query: %s", err)
-			}
 
-			lit.Debug("took %s to answer query", time.Since(start).String())
 		}
+
+		return nil
 	})
 
 	// Start bot
 	lit.Info("robertoTelegram is now running")
 	b.Start()
 
+}
+
+// Escapes all the special characters in a string to be used in a Markdown message
+func escapeMarkdown(s string) string {
+	return strings.NewReplacer("_", "\\_", "*", "\\*", "[", "\\[", "`", "\\`", ".", "\\.").Replace(s)
 }
