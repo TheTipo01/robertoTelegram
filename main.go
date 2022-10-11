@@ -29,6 +29,10 @@ var (
 	host string
 	// HTTP server address
 	addr string
+	// String replacer
+	replacer = strings.NewReplacer("_", "\\_", "*", "\\*", "[", "\\[", "]", "\\]", "(", "\\(", ")", "\\)",
+		"~", "\\~", "`", "\\`", ">", "\\>", "#", "\\#", "+", "\\+", "-", "\\-", "=", "\\=", "|", "\\|", "{",
+		"\\{", "}", "\\}", ".", "\\.", "!", "\\!")
 )
 
 func init() {
@@ -130,7 +134,7 @@ func main() {
 			results[0] = &tb.VoiceResult{
 				URL:     host + uuid + audioExtension,
 				Title:   query,
-				Caption: "||" + escapeMarkdown(query) + "||",
+				Caption: "||" + replacer.Replace(query) + "||",
 			}
 
 			results[0].SetResultID(uuid)
@@ -152,10 +156,4 @@ func main() {
 	// Start bot
 	lit.Info("robertoTelegram is now running")
 	b.Start()
-
-}
-
-// Escapes all the special characters in a string to be used in a Markdown message
-func escapeMarkdown(s string) string {
-	return strings.NewReplacer("_", "\\_", "*", "\\*", "[", "\\[", "`", "\\`", ".", "\\.").Replace(s)
 }
