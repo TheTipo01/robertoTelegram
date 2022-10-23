@@ -1,6 +1,5 @@
 # robertoTelegram
 [![Go Report Card](https://goreportcard.com/badge/github.com/TheTipo01/roberto)](https://goreportcard.com/report/github.com/TheTipo01/robertoTelegram)
-[![Build Status](https://travis-ci.com/TheTipo01/robertoTelegram.svg?branch=master)](https://travis-ci.com/TheTipo01/robertoTelegram)
 
 [roberto](https://github.com/TheTipo01/roberto) but for telegram!
 
