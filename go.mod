@@ -1,4 +1,4 @@
-module robertoTelegram
+module github.com/TheTipo01/robertoTelegram
 
 go 1.15
 
