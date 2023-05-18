@@ -14,10 +14,11 @@ type config struct {
 	Token    string `fig:"token" validate:"required"`
 	LogLevel string `fig:"loglevel" validate:"required"`
 	Voice    string `fig:"voice" validate:"required"`
+	Channel  int64  `fig:"channel" validate:"required"`
 }
 
 const (
-	audioExtension = ".mp3"
+	audioExtension = ".ogg"
 	tempDir        = "./temp"
 )
 
@@ -28,6 +29,8 @@ var (
 	replacer = strings.NewReplacer("_", "\\_", "*", "\\*", "[", "\\[", "]", "\\]", "(", "\\(", ")", "\\)",
 		"~", "\\~", "`", "\\`", ">", "\\>", "#", "\\#", "+", "\\+", "-", "\\-", "=", "\\=", "|", "\\|", "{",
 		"\\{", "}", "\\}", ".", "\\.", "!", "\\!")
+	// Channel where to send the audio
+	channel int64
 )
 
 func init() {
@@ -43,6 +46,7 @@ func init() {
 	// Config file found
 	token = cfg.Token
 	libroberto.Voice = cfg.Voice
+	channel = cfg.Channel
 
 	// Set lit.LogLevel to the given value
 	switch strings.ToLower(cfg.LogLevel) {
@@ -109,16 +113,18 @@ func main() {
 				isCommand = false
 			}
 
-			uuid = libroberto.GenAudioMp3(query, time.Second*30)
+			uuid = libroberto.GenAudio(query, "ogg", time.Second*30)
 
 			// So the title of the result isn't all uppercase when there's no command
 			if !isCommand {
 				query = text
 			}
 
+			send, _ := c.Bot().Send(tb.ChatID(channel), &tb.Voice{File: tb.FromDisk(tempDir + "/" + uuid + audioExtension), MIME: "audio/ogg"})
+
 			// Create result
 			results[0] = &tb.VoiceResult{
-				Cache:   tb.FromDisk(tempDir + uuid + audioExtension).FileID,
+				Cache:   send.Voice.FileID,
 				Title:   query,
 				Caption: "||" + replacer.Replace(query) + "||",
 			}

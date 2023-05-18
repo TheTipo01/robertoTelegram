@@ -6,3 +6,7 @@ loglevel: informational
 
 # The voice to use
 voice: Roberto
+
+# A group or channel to send audio to.
+# Needed as telegram bots can't send file directly when using inline mode.
+channel: -123456789
