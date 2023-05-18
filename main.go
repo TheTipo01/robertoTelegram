@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/TheTipo01/libRoberto"
 	"github.com/bwmarrin/lit"
+	"github.com/jfreymuth/oggvorbis"
 	"github.com/kkyr/fig"
 	tb "gopkg.in/telebot.v3"
 	"os"
@@ -120,7 +121,16 @@ func main() {
 				query = text
 			}
 
-			send, _ := c.Bot().Send(tb.ChatID(channel), &tb.Voice{File: tb.FromDisk(tempDir + "/" + uuid + audioExtension), MIME: "audio/ogg"})
+			f, err := os.Open(tempDir + "/" + uuid + audioExtension)
+			if err != nil {
+				lit.Error(err.Error())
+				return nil
+			}
+
+			samples, _, _ := oggvorbis.GetLength(f)
+			_ = f.Close()
+
+			send, _ := c.Bot().Send(tb.ChatID(channel), &tb.Voice{File: tb.FromDisk(tempDir + "/" + uuid + audioExtension), MIME: "audio/ogg", Duration: int(samples / 48000)})
 
 			// Create result
 			results[0] = &tb.VoiceResult{
