@@ -5,8 +5,6 @@ import (
 	"github.com/bwmarrin/lit"
 	"github.com/kkyr/fig"
 	tb "gopkg.in/telebot.v3"
-	"math/rand"
-	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -14,21 +12,18 @@ import (
 
 type config struct {
 	Token    string `fig:"token" validate:"required"`
-	Host     string `fig:"host" validate:"required"`
 	LogLevel string `fig:"loglevel" validate:"required"`
 	Voice    string `fig:"voice" validate:"required"`
-	Address  string `fig:"address" validate:"required"`
 }
 
-const audioExtension = ".mp3"
+const (
+	audioExtension = ".mp3"
+	tempDir        = "./temp"
+)
 
 var (
 	// Telegram token
 	token string
-	// HTTP server where we host .mp3
-	host string
-	// HTTP server address
-	addr string
 	// String replacer
 	replacer = strings.NewReplacer("_", "\\_", "*", "\\*", "[", "\\[", "]", "\\]", "(", "\\(", ")", "\\)",
 		"~", "\\~", "`", "\\`", ">", "\\>", "#", "\\#", "+", "\\+", "-", "\\-", "=", "\\=", "|", "\\|", "{",
@@ -36,9 +31,6 @@ var (
 )
 
 func init() {
-	// Initialize rand
-	rand.Seed(time.Now().Unix())
-
 	lit.LogLevel = lit.LogError
 
 	var cfg config
@@ -50,8 +42,6 @@ func init() {
 
 	// Config file found
 	token = cfg.Token
-	host = cfg.Host
-	addr = cfg.Address
 	libroberto.Voice = cfg.Voice
 
 	// Set lit.LogLevel to the given value
@@ -67,18 +57,14 @@ func init() {
 	}
 
 	// Create folders used by the bot
-	if _, err = os.Stat("./temp"); err != nil {
-		if err = os.Mkdir("./temp", 0755); err != nil {
+	if _, err = os.Stat(tempDir); err != nil {
+		if err = os.Mkdir(tempDir, 0755); err != nil {
 			lit.Error("Cannot create temp directory, %s", err)
 		}
 	}
 }
 
 func main() {
-	// Start HTTP server to serve generated .mp3 files
-	http.Handle("/temp/", http.StripPrefix("/temp", http.FileServer(http.Dir("./temp"))))
-	go http.ListenAndServe(addr, nil)
-
 	// Create bot
 	b, err := tb.NewBot(tb.Settings{
 		Token:  token,
@@ -132,7 +118,7 @@ func main() {
 
 			// Create result
 			results[0] = &tb.VoiceResult{
-				URL:     host + uuid + audioExtension,
+				Cache:   tb.FromDisk(tempDir + uuid + audioExtension).FileID,
 				Title:   query,
 				Caption: "||" + replacer.Replace(query) + "||",
 			}
