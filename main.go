@@ -131,7 +131,11 @@ func main() {
 			samples, _, _ := oggvorbis.GetLength(f)
 			_ = f.Close()
 
-			send, _ := c.Bot().Send(tb.ChatID(channel), &tb.Voice{File: tb.FromDisk(tempDir + "/" + uuid + audioExtension), MIME: "audio/ogg", Duration: int(samples / 48000)})
+			send, err := c.Bot().Send(tb.ChatID(channel), &tb.Voice{File: tb.FromDisk(tempDir + "/" + uuid + audioExtension), MIME: "audio/ogg", Duration: int(samples / 48000)})
+			if err != nil {
+				lit.Error(err.Error())
+				return nil
+			}
 
 			// Create result
 			results[0] = &tb.VoiceResult{
