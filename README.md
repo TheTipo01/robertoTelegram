@@ -2,7 +2,10 @@
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/TheTipo01/roberto)](https://goreportcard.com/report/github.com/TheTipo01/robertoTelegram)
 
-[roberto](https://github.com/TheTipo01/roberto) but for telegram!
+[roberto](https://github.com/TheTipo01/roberto) but for Telegram!
+
+Requires the Loquendo Roberto voice to work, and the [balcon.exe](http://cross-plus-a.com/bconsole.htm) binary to be in
+the same folder as the executable (or in the path!)
 
 ## Usage
 

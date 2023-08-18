@@ -14,23 +14,21 @@ builds:
       - 386
       - arm
       - arm64
+    ignore:
+      - goos: windows
+        goarch: 386
+      - goos: windows
+        goarch: arm
 archives:
   - format: zip
-    replacements:
-      darwin: Darwin
-      linux: Linux
-      windows: Windows
-      386: i386
-      amd64: x86_64
     files:
       - README.md
       - LICENSE
-      - balcon.exe
-      - libsamplerate.dll
+      - example_config.yml
 checksum:
-  name_template: 'checksums.txt'
+  name_template: checksums.txt
 snapshot:
-  name_template: "{{ .Tag }}-next"
+  name_template: '{{ .Tag }}-next'
 changelog:
   sort: asc
   filters:

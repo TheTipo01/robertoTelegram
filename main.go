@@ -19,7 +19,8 @@ type config struct {
 }
 
 const (
-	audioExtension = ".ogg"
+	audioType      = "opus"
+	audioExtension = "." + audioType
 	tempDir        = "./temp"
 )
 
@@ -114,7 +115,7 @@ func main() {
 				isCommand = false
 			}
 
-			uuid = libroberto.GenAudio(query, "ogg", time.Second*30)
+			uuid = libroberto.GenAudio(query, audioType, time.Second*30)
 
 			// So the title of the result isn't all uppercase when there's no command
 			if !isCommand {
