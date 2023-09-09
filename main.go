@@ -3,10 +3,8 @@ package main
 import (
 	"github.com/TheTipo01/libRoberto"
 	"github.com/bwmarrin/lit"
-	"github.com/jfreymuth/oggvorbis"
 	"github.com/kkyr/fig"
 	tb "gopkg.in/telebot.v3"
-	"os"
 	"strings"
 	"time"
 )
@@ -19,9 +17,7 @@ type config struct {
 }
 
 const (
-	audioType      = "opus"
-	audioExtension = "." + audioType
-	tempDir        = "./temp"
+	audioType = "opus"
 )
 
 var (
@@ -61,13 +57,6 @@ func init() {
 	case "logdebug", "debug":
 		lit.LogLevel = lit.LogDebug
 	}
-
-	// Create folders used by the bot
-	if _, err = os.Stat(tempDir); err != nil {
-		if err = os.Mkdir(tempDir, 0755); err != nil {
-			lit.Error("Cannot create temp directory, %s", err)
-		}
-	}
 }
 
 func main() {
@@ -89,7 +78,6 @@ func main() {
 				start      = time.Now()
 				query      string
 				upperQuery = strings.ToUpper(text)
-				uuid       string
 				isCommand  = true
 				results    = make(tb.Results, 1)
 			)
@@ -115,27 +103,23 @@ func main() {
 				isCommand = false
 			}
 
-			uuid = libroberto.GenAudio(query, audioType, time.Second*30)
+			cmds := libroberto.GenAudioPipes(query, audioType)
+			out, _ := cmds[1].StdoutPipe()
+			libroberto.CmdsStart(cmds)
 
 			// So the title of the result isn't all uppercase when there's no command
 			if !isCommand {
 				query = text
 			}
 
-			f, err := os.Open(tempDir + "/" + uuid + audioExtension)
+			send, err := c.Bot().Send(tb.ChatID(channel), &tb.Voice{File: tb.FromReader(out), MIME: "audio/ogg"})
 			if err != nil {
 				lit.Error(err.Error())
 				return nil
 			}
 
-			samples, _, _ := oggvorbis.GetLength(f)
-			_ = f.Close()
-
-			send, err := c.Bot().Send(tb.ChatID(channel), &tb.Voice{File: tb.FromDisk(tempDir + "/" + uuid + audioExtension), MIME: "audio/ogg", Duration: int(samples / 48000)})
-			if err != nil {
-				lit.Error(err.Error())
-				return nil
-			}
+			libroberto.CmdsKill(cmds)
+			libroberto.CmdsWait(cmds)
 
 			// Create result
 			results[0] = &tb.VoiceResult{
@@ -144,7 +128,7 @@ func main() {
 				Caption: "||" + replacer.Replace(query) + "||",
 			}
 
-			results[0].SetResultID(uuid)
+			results[0].SetResultID(libroberto.GenUUID(query))
 			results[0].SetParseMode(tb.ModeMarkdownV2)
 
 			lit.Debug("took %s to answer query", time.Since(start).String())
