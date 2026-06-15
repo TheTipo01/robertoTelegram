@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os/exec"
 	"strings"
 	"time"
 
@@ -71,6 +72,57 @@ func init() {
 	}
 }
 
+func generateAudio(text string) (query string, isCommand bool, out io.ReadCloser, cmds []*exec.Cmd, err error) {
+	upperQuery := strings.ToUpper(text)
+
+	isCommand = true
+
+	switch {
+	case strings.HasPrefix(upperQuery, "TRENO"):
+		query = strings.TrimSpace(libroberto.SearchAndGetTrain(strings.TrimPrefix(upperQuery, "TRENO ")))
+		if query == "" {
+			query = "Nessun treno trovato, agagagaga!"
+		}
+
+	case strings.HasPrefix(upperQuery, "COVID"):
+		query = strings.TrimSpace(libroberto.GetCovid())
+
+	case strings.HasPrefix(upperQuery, "BESTEMMIA"):
+		query = strings.TrimSpace(libroberto.Bestemmia())
+
+	default:
+		query = libroberto.EmojiToDescription(upperQuery)
+		isCommand = false
+	}
+
+	cmds = libroberto.GenAudioPipes(query, audioType)
+	if restRoberto != "" {
+		cmds = cmds[1:2]
+
+		endpoint, _ := url.Parse(restRoberto)
+		queryParams := url.Values{}
+		queryParams.Set("token", restRobertoToken)
+		queryParams.Set("text", query)
+		queryParams.Set("voice", libroberto.Voice)
+		endpoint.RawQuery = queryParams.Encode()
+
+		resp, e := http.Get(endpoint.String())
+		if e != nil {
+			lit.Error("Error calling restRoberto: %s", e.Error())
+			err = e
+			return
+		}
+
+		cmds[0].Stdin = resp.Body
+		out, _ = cmds[0].StdoutPipe()
+	} else {
+		out, _ = cmds[1].StdoutPipe()
+	}
+
+	libroberto.CmdsStart(cmds)
+	return
+}
+
 func main() {
 	// Create bot
 	b, err := tb.NewBot(tb.Settings{
@@ -87,63 +139,17 @@ func main() {
 
 		if text != "" {
 			var (
-				start      = time.Now()
-				query      string
-				upperQuery = strings.ToUpper(text)
-				isCommand  = true
-				results    = make(tb.Results, 1)
+				start   = time.Now()
+				results = make(tb.Results, 1)
 			)
 
 			lit.Debug("%s: %s", c.Query().Sender.Username, text)
 
-			// Various custom command
-			switch {
-			case strings.HasPrefix(upperQuery, "TRENO"):
-				query = strings.TrimSpace(libroberto.SearchAndGetTrain(strings.TrimPrefix(upperQuery, "TRENO ")))
-				if query == "" {
-					query = "Nessun treno trovato, agagagaga!"
-				}
-
-			case strings.HasPrefix(upperQuery, "COVID"):
-				query = strings.TrimSpace(libroberto.GetCovid())
-
-			case strings.HasPrefix(upperQuery, "BESTEMMIA"):
-				query = strings.TrimSpace(libroberto.Bestemmia())
-
-			default:
-				query = libroberto.EmojiToDescription(upperQuery)
-				isCommand = false
+			query, isCommand, out, cmds, err := generateAudio(text)
+			if err != nil {
+				return nil
 			}
 
-			var out io.ReadCloser
-			cmds := libroberto.GenAudioPipes(query, audioType)
-			if restRoberto != "" {
-				cmds = cmds[1:2]
-				// Setup query parameters
-				endpoint, _ := url.Parse(restRoberto)
-
-				queryParams := url.Values{}
-				queryParams.Set("token", restRobertoToken)
-				queryParams.Set("text", query)
-				queryParams.Set("voice", libroberto.Voice)
-
-				endpoint.RawQuery = queryParams.Encode()
-				resp, err := http.Get(endpoint.String())
-				if err != nil {
-					lit.Error("Error calling restRoberto: %s", err.Error())
-					return nil
-				}
-
-				// Get the response and give it to the first command
-				cmds[0].Stdin = resp.Body
-
-				out, _ = cmds[0].StdoutPipe()
-			} else {
-				out, _ = cmds[1].StdoutPipe()
-			}
-			libroberto.CmdsStart(cmds)
-
-			// So the title of the result isn't all uppercase when there's no command
 			if !isCommand {
 				query = text
 			}
@@ -157,7 +163,6 @@ func main() {
 			libroberto.CmdsKill(cmds)
 			libroberto.CmdsWait(cmds)
 
-			// Create result
 			results[0] = &tb.VoiceResult{
 				Cache:   send.Voice.FileID,
 				Title:   query,
@@ -169,15 +174,39 @@ func main() {
 
 			lit.Debug("took %s to answer query", time.Since(start).String())
 
-			// Send audio
 			return c.Answer(&tb.QueryResponse{
 				Results:   results,
-				CacheTime: 86400, // one day
+				CacheTime: 86400,
 			})
-
 		}
 
 		return nil
+	})
+
+	b.Handle("/start", func(c tb.Context) error {
+		return c.Reply("Ciao! Sono un bot open source per la sintesi vocale. Il codice sorgente è disponibile su GitHub: https://github.com/TheTipo01/robertoTelegram")
+	})
+
+	b.Handle(tb.OnText, func(c tb.Context) error {
+		if c.Chat().Type != tb.ChatPrivate {
+			return nil
+		}
+
+		text := c.Text()
+		if text == "" {
+			return nil
+		}
+
+		lit.Debug("%s: %s", c.Sender().Username, text)
+		_, _, out, cmds, err := generateAudio(text)
+		if err != nil {
+			return nil
+		}
+
+		defer libroberto.CmdsKill(cmds)
+		defer libroberto.CmdsWait(cmds)
+
+		return c.Reply(&tb.Voice{File: tb.FromReader(out), MIME: "audio/ogg"})
 	})
 
 	// Start bot
