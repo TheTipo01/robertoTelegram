@@ -185,7 +185,17 @@ func main() {
 	})
 
 	b.Handle("/start", func(c tb.Context) error {
-		return c.Reply("Ciao! Sono un bot open source per la sintesi vocale. Il codice sorgente è disponibile su GitHub: https://github.com/TheTipo01/robertoTelegram")
+		return c.Reply(`
+Questo bot genera file audio usando la famosa voce di Trenitalia (anche chiamata Roberto)!
+Funziona inline, basta mettere il nome del bot nella chat e scrivere cosa vuoi che dica!
+
+Ci sono anche dei comandi speciali:
+    treno <numero di treno>
+    covid
+    bestemmia
+
+Il bot è open source! Trovate il codice qui: https://github.com/TheTipo01/robertoTelegram
+`)
 	})
 
 	b.Handle(tb.OnText, func(c tb.Context) error {
