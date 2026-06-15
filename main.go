@@ -150,6 +150,7 @@ func main() {
 				return nil
 			}
 
+			// So the title of the result isn't all uppercase when there's no command
 			if !isCommand {
 				query = text
 			}
